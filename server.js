@@ -21,8 +21,10 @@ mongoose
     console.error("Error connecting to MongoDB:", err);
   });
 
+const API = process.env.BASE_URL;
+
 // User signup
-app.post("/signup", async (req, res) => {
+app.post(`/signup`, async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = new User({ username, password: hashedPassword });
@@ -31,7 +33,7 @@ app.post("/signup", async (req, res) => {
 });
 
 // User login
-app.post("/login", async (req, res) => {
+app.post(`/login`, async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (!user) {
@@ -41,12 +43,12 @@ app.post("/login", async (req, res) => {
   if (!isPasswordValid) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
-  const token = jwt.sign({ userId: user._id }, "your-secret-key");
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
   res.json({ token });
 });
 
 // Create a new task
-app.post("/tasks", verifyToken, async (req, res) => {
+app.post(`/tasks`, verifyToken, async (req, res) => {
   const { title, dueDate } = req.body;
   const task = new Task({ title, userId: req.userId, dueDate });
   await task.save();
@@ -54,13 +56,13 @@ app.post("/tasks", verifyToken, async (req, res) => {
 });
 
 // Get all tasks
-app.get("/tasks", verifyToken, async (req, res) => {
+app.get(`/tasks`, verifyToken, async (req, res) => {
   const tasks = await Task.find({ userId: req.userId });
   res.json(tasks);
 });
 
 // Delete a task
-app.delete("/tasks/:id", verifyToken, async (req, res) => {
+app.delete(`/tasks/:id`, verifyToken, async (req, res) => {
   const task = await Task.findOneAndDelete({
     _id: req.params.id,
     userId: req.userId,
